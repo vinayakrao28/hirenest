@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HireNest — Where Talent Meets Opportunity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK (v10 modular via CDN) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+      from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getStorage, ref, uploadBytes, getDownloadURL }
+      from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyAWfhKKLCwR_XzO2I0yrDc_NZhcY2-qbnE",
+      authDomain:        "hirenest-91fed.firebaseapp.com",
+      projectId:         "hirenest-91fed",
+      storageBucket:     "hirenest-91fed.firebasestorage.app",
+      messagingSenderId: "26952280175",
+      appId:             "1:26952280175:web:5acfa7ed1699cf5de5059a",
+      measurementId:     "G-5E1S53XDL1"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const db   = getFirestore(app);
+    const stor = getStorage(app);
+
+    window._db   = db;
+    window._stor = stor;
+    window._fb   = { collection, addDoc, getDocs, query, orderBy, serverTimestamp, ref, uploadBytes, getDownloadURL };
+    window._fbReady = true;
+    document.dispatchEvent(new Event('fb-ready'));
+  </script>
+
+  <style>
+    /* ── Variables ─────────────────────────────────────────────── */
+    :root {
+      --bg:          #F9F6F1;
+      --surface:     #FFFFFF;
+      --primary:     #1B3A2D;
+      --primary2:    #24503D;
+      --accent:      #C96B3A;
+      --accent2:     #E08558;
+      --text:        #18180F;
+      --muted:       #6A6A5C;
+      --border:      #E2DAD0;
+      --shadow:      0 4px 24px rgba(27,58,45,.07);
+      --shadow-lg:   0 16px 48px rgba(27,58,45,.14);
+      --r:           14px;
+      --t:           .24s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+    button{font-family:'DM Sans',sans-serif;cursor:pointer}
+    h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;font-weight:600;line-height:1.12}
+
+    /* ── Nav ───────────────────────────────────────────────────── */
+    nav{
+      position:sticky;top:0;z-index:90;
+      background:rgba(249,246,241,.93);backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--border);
+      padding:0 2rem;height:62px;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .logo{font-family:'Cormorant Garamond',serif;font-size:1.65rem;font-weight:700;color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:2px}
+    .logo span{color:var(--accent)}
+    .nav-links{display:flex;align-items:center;gap:4px}
+    .nl{padding:8px 14px;border-radius:8px;font-size:.875rem;font-weight:500;color:var(--muted);background:none;border:none;transition:var(--t)}
+    .nl:hover{color:var(--primary);background:rgba(27,58,45,.06)}
+    .nl.hi{background:var(--primary);color:#fff;padding:8px 18px;border-radius:8px}
+    .nl.hi:hover{background:var(--primary2)}
+
+    /* ── Views ─────────────────────────────────────────────────── */
+    .view{display:none;animation:fadeUp .35s ease both}
+    .view.on{display:block}
+
+    /* ── Hero ──────────────────────────────────────────────────── */
+    .hero{
+      min-height:calc(100vh - 62px);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:4rem 1.5rem 5rem;text-align:center;position:relative;overflow:hidden;
+    }
+    .hero::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 70% 45% at 50% -5%, rgba(201,107,58,.13) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 90% 95%, rgba(27,58,45,.09) 0%, transparent 55%);
+    }
+    .hero-pill{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(201,107,58,.11);border:1px solid rgba(201,107,58,.28);
+      color:var(--accent);padding:5px 16px;border-radius:100px;
+      font-size:.76rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+      margin-bottom:2rem;
+    }
+    .hero h1{font-size:clamp(3rem,9vw,6.5rem);color:var(--primary);margin-bottom:1.4rem;line-height:1.05}
+    .hero h1 em{color:var(--accent);font-style:italic}
+    .hero-sub{max-width:500px;color:var(--muted);font-size:1.05rem;line-height:1.7;margin-bottom:3rem}
+    .hero-cards{display:flex;gap:1.25rem;flex-wrap:wrap;justify-content:center}
+    .hcard{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:22px;padding:2.25rem 1.75rem;width:270px;
+      cursor:pointer;transition:var(--t);box-shadow:var(--shadow);text-align:left;
+    }
+    .hcard:hover{transform:translateY(-9px);box-shadow:var(--shadow-lg);border-color:var(--primary)}
+    .hcard-icon{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;margin-bottom:1.1rem}
+    .hcard.c .hcard-icon{background:rgba(201,107,58,.11)}
+    .hcard.r .hcard-icon{background:rgba(27,58,45,.09)}
+    .hcard h3{font-size:1.35rem;margin-bottom:.4rem}
+    .hcard p{font-size:.86rem;color:var(--muted);margin-bottom:1.3rem;line-height:1.6}
+    .hcard-cta{font-size:.87rem;font-weight:600;color:var(--primary);display:flex;align-items:center;gap:4px}
+    .hcard.r .hcard-cta{color:var(--accent)}
+    .stats{display:flex;gap:3.5rem;margin-top:4rem}
+    .stat-n{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:700;color:var(--primary)}
+    .stat-l{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+    /* ── Section wrapper ───────────────────────────────────────── */
+    .wrap{max-width:1120px;margin:0 auto;padding:4rem 1.5rem}
+    .sec-head{margin-bottom:2.25rem}
+    .sec-head h2{font-size:2.4rem;color:var(--primary)}
+    .sec-head p{color:var(--muted);margin-top:.4rem}
+
+    /* ── Filter bar ────────────────────────────────────────────── */
+    .fbar{display:flex;gap:.75rem;margin-bottom:2rem;flex-wrap:wrap;align-items:center}
+    .fsearch{
+      flex:1;min-width:200px;padding:11px 16px;
+      border:1.5px solid var(--border);border-radius:var(--r);
+      font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--surface);
+      color:var(--text);transition:var(--t);
+    }
+    .fsearch:focus{outline:none;border-color:var(--primary)}
+    .fchip{
+      padding:8px 16px;border:1.5px solid var(--border);border-radius:100px;
+      background:var(--surface);font-size:.82rem;font-weight:500;transition:var(--t);
+    }
+    .fchip:hover,.fchip.on{border-color:var(--primary);background:var(--primary);color:#fff}
+
+    /* ── Grid ──────────────────────────────────────────────────── */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.25rem}
+
+    /* ── Job Card ──────────────────────────────────────────────── */
+    .jcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.4rem;cursor:pointer;transition:var(--t);box-shadow:var(--shadow)}
+    .jcard:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);border-color:var(--primary)}
+    .jcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.9rem}
+    .clogo{width:42px;height:42px;border-radius:10px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700}
+    .jtag{padding:3px 10px;border-radius:100px;font-size:.73rem;font-weight:600;background:rgba(201,107,58,.1);color:var(--accent)}
+    .jcard h3{font-size:1.08rem;margin-bottom:.25rem}
+    .jco{font-size:.83rem;color:var(--muted);margin-bottom:.75rem}
+    .jmeta{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:.75rem}
+    .jmi{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:3px}
+    .jdesc{font-size:.85rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.55;margin-bottom:.9rem}
+    .jfoot{display:flex;justify-content:space-between;align-items:center}
+    .jdate{font-size:.74rem;color:var(--muted)}
+
+    /* ── Candidate Card ────────────────────────────────────────── */
+    .ccard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.4rem;transition:var(--t);box-shadow:var(--shadow)}
+    .ccard:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
+    .avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;margin-bottom:.9rem}
+    .ccard h3{font-size:1.08rem;margin-bottom:.3rem}
+    .cdomain{display:inline-block;padding:2px 10px;border-radius:100px;font-size:.74rem;font-weight:600;background:rgba(27,58,45,.08);color:var(--primary);margin-bottom:.5rem}
+    .cbio{font-size:.85rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.55;margin-bottom:.9rem}
+    .clinks{display:flex;gap:.65rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem}
+    .clink{font-size:.82rem;font-weight:600;color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+    .clink.li{color:var(--primary)}
+    .cmeta{font-size:.74rem;color:var(--muted)}
+
+    /* ── Form page ─────────────────────────────────────────────── */
+    .fwrap{max-width:660px;margin:0 auto;padding:4rem 1.5rem}
+    .fhead{margin-bottom:2.25rem}
+    .badge{display:inline-block;padding:4px 13px;border-radius:100px;font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.9rem}
+    .bc{background:rgba(201,107,58,.11);color:var(--accent)}
+    .br{background:rgba(27,58,45,.09);color:var(--primary)}
+    .fhead h2{font-size:2.1rem;color:var(--primary)}
+    .fhead p{color:var(--muted);margin-top:.4rem}
+    .fcard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2.25rem;box-shadow:var(--shadow)}
+    .fg{margin-bottom:1.35rem}
+    .frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    label{display:block;font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:5px}
+    label .req{color:var(--accent)}
+    input[type=text],input[type=email],input[type=tel],input[type=url],select,textarea{
+      width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r);
+      font-family:'DM Sans',sans-serif;font-size:.92rem;color:var(--text);background:var(--bg);transition:var(--t);
+    }
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);background:var(--surface)}
+    textarea{resize:vertical;min-height:120px;line-height:1.6}
+    .upbox{
+      border:2px dashed var(--border);border-radius:var(--r);padding:1.75rem;
+      text-align:center;cursor:pointer;transition:var(--t);position:relative;
+    }
+    .upbox:hover,.upbox.drag{border-color:var(--accent);background:rgba(201,107,58,.04)}
+    .upbox input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+    .upicon{font-size:1.8rem;margin-bottom:.4rem}
+    .upt{font-size:.85rem;color:var(--muted)}
+    .upt strong{color:var(--primary)}
+    .upname{margin-top:.5rem;font-size:.83rem;color:var(--accent);font-weight:500}
+    .sbtn{
+      width:100%;padding:13px;border:none;border-radius:var(--r);
+      font-size:.97rem;font-weight:600;transition:var(--t);margin-top:.25rem;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .sbtn.g{background:var(--primary);color:#fff}
+    .sbtn.g:hover{background:var(--primary2);transform:translateY(-1px)}
+    .sbtn.o{background:var(--accent);color:#fff}
+    .sbtn.o:hover{background:var(--accent2);transform:translateY(-1px)}
+    .sbtn:disabled{opacity:.55;cursor:not-allowed;transform:none!important}
+
+    /* ── Modal ─────────────────────────────────────────────────── */
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;
+      display:flex;align-items:center;justify-content:center;padding:1rem;
+      backdrop-filter:blur(5px);animation:fadeIn .2s ease;
+    }
+    .modal{
+      background:var(--surface);border-radius:22px;padding:2.25rem;
+      max-width:600px;width:100%;max-height:90vh;overflow-y:auto;
+      position:relative;box-shadow:0 24px 80px rgba(0,0,0,.28);
+    }
+    .mclose{
+      position:absolute;top:1rem;right:1rem;background:rgba(27,58,45,.07);
+      border:none;width:32px;height:32px;border-radius:8px;
+      font-size:1.1rem;line-height:1;color:var(--muted);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;transition:var(--t);
+    }
+    .mclose:hover{background:rgba(27,58,45,.14);color:var(--text)}
+
+    /* ── Toast ─────────────────────────────────────────────────── */
+    #toast{
+      position:fixed;bottom:1.75rem;right:1.75rem;z-index:999;
+      padding:.9rem 1.4rem;border-radius:var(--r);font-size:.88rem;font-weight:500;
+      box-shadow:0 8px 32px rgba(0,0,0,.22);max-width:350px;
+      transform:translateY(100px);opacity:0;transition:all .38s cubic-bezier(.4,0,.2,1);
+    }
+    #toast.show{transform:translateY(0);opacity:1}
+    #toast.ok{background:#1B4D35;color:#fff}
+    #toast.err{background:#B83232;color:#fff}
+
+    /* ── Util ──────────────────────────────────────────────────── */
+    .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 18px;border-radius:var(--r);font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:var(--t)}
+    .btn-p{background:var(--primary);color:#fff}
+    .btn-p:hover{background:var(--primary2);transform:translateY(-1px)}
+    .loading{text-align:center;padding:4rem;color:var(--muted)}
+    .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto .9rem}
+    .empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
+    .empty-i{font-size:2.8rem;margin-bottom:.75rem}
+    .empty h3{font-size:1.5rem;color:var(--text);margin-bottom:.4rem}
+    .divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+    .chip-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem}
+    .chip{padding:3px 10px;border-radius:100px;font-size:.76rem;font-weight:600}
+    .chip-g{background:rgba(27,58,45,.08);color:var(--primary)}
+    .chip-o{background:rgba(201,107,58,.1);color:var(--accent)}
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    footer{background:var(--primary);color:rgba(255,255,255,.65);padding:2.25rem 2rem;text-align:center;margin-top:5rem}
+    footer .fl{color:#fff;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;margin-bottom:.35rem}
+    footer p{font-size:.82rem}
+
+    /* ── Animations ────────────────────────────────────────────── */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media(max-width:620px){
+      .nl:not(.hi){display:none}
+      .hcard{width:100%;max-width:340px}
+      .frow{grid-template-columns:1fr}
+      .fcard{padding:1.5rem}
+      .stats{gap:2rem}
+      .modal{padding:1.5rem}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ╔════════════════ NAV ════════════════╗ -->
+<nav>
+  <div class="logo" onclick="go('home')">Hire<span>Nest</span></div>
+  <div class="nav-links">
+    <button class="nl" onclick="go('jobs')">Browse Jobs</button>
+    <button class="nl" onclick="go('talent')">Find Talent</button>
+    <button class="nl" onclick="go('post')">Post a Job</button>
+    <button class="nl hi" onclick="go('cv')">Upload CV</button>
+  </div>
+</nav>
+
+<!-- ╔════════════════ HOME ════════════════╗ -->
+<div id="v-home" class="view">
+  <section class="hero">
+    <div class="hero-pill">🌿 Private HR Community Portal</div>
+    <h1>Where <em>Talent</em><br>Meets Opportunity</h1>
+    <p class="hero-sub">The exclusive job board for our WhatsApp HR & Recruitment group. Find your next hire or your next role — all in one place.</p>
+
+    <div class="hero-cards">
+      <div class="hcard c" onclick="go('cv')">
+        <div class="hcard-icon">🎯</div>
+        <h3>Looking for Work</h3>
+        <p>Upload your CV, share your expertise and work history to be discovered by top recruiters.</p>
+        <div class="hcard-cta">Upload My CV <span>→</span></div>
+      </div>
+      <div class="hcard r" onclick="go('post')">
+        <div class="hcard-icon">🏢</div>
+        <h3>Hiring Talent</h3>
+        <p>Post your vacancy and reach qualified candidates from our curated talent community.</p>
+        <div class="hcard-cta">Post a Vacancy <span>→</span></div>
+      </div>
+      <div class="hcard r" onclick="go('talent')" style="--primary:var(--accent)">
+        <div class="hcard-icon" style="background:rgba(201,107,58,.1)">🔍</div>
+        <h3>Browse Talent</h3>
+        <p>Explore candidate profiles, their domains, experience, and download their CVs directly.</p>
+        <div class="hcard-cta">View Candidates <span>→</span></div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div>
+        <div class="stat-n" id="s-jobs">—</div>
+        <div class="stat-l">Jobs Posted</div>
+      </div>
+      <div>
+        <div class="stat-n" id="s-cands">—</div>
+        <div class="stat-l">Candidates</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ╔════════════════ BROWSE JOBS ════════════════╗ -->
+<div id="v-jobs" class="view">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Open Positions</h2>
+      <p>All vacancies posted by recruiters in our community.</p>
+    </div>
+    <div class="fbar">
+      <input class="fsearch" placeholder="Search jobs, companies, skills…" id="j-search" oninput="filterJobs()">
+      <button class="fchip on" onclick="setJType(this,'')" data-t="">All</button>
+      <button class="fchip" onclick="setJType(this,'Full-time')" data-t="Full-time">Full-time</button>
+      <button class="fchip" onclick="setJType(this,'Part-time')" data-t="Part-time">Part-time</button>
+      <button class="fchip" onclick="setJType(this,'Contract')" data-t="Contract">Contract</button>
+      <button class="fchip" onclick="setJType(this,'Remote')" data-t="Remote">Remote</button>
+    </div>
+    <div id="j-grid" class="grid"><div class="loading"><div class="spin"></div>Loading jobs…</div></div>
+  </div>
+</div>
+
+<!-- ╔════════════════ TALENT POOL ════════════════╗ -->
+<div id="v-talent" class="view">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Talent Pool</h2>
+      <p>Browse candidates actively looking for opportunities.</p>
+    </div>
+    <div class="fbar">
+      <input class="fsearch" placeholder="Search by name, domain, skills, location…" id="c-search" oninput="filterTalent()">
+    </div>
+    <div id="c-grid" class="grid"><div class="loading"><div class="spin"></div>Loading candidates…</div></div>
+  </div>
+</div>
+
+<!-- ╔════════════════ SUBMIT CV ════════════════╗ -->
+<div id="v-cv" class="view">
+  <div class="fwrap">
+    <div class="fhead">
+      <div class="badge bc">For Candidates</div>
+      <h2>Submit Your Profile</h2>
+      <p>Fill in your details and upload your CV. Recruiters from our community will be able to find you.</p>
+    </div>
+    <div class="fcard">
+      <form id="cv-form" onsubmit="submitCV(event)">
+        <div class="frow">
+          <div class="fg">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" name="name" placeholder="Your full name" required>
+          </div>
+          <div class="fg">
+            <label>Email Address <span class="req">*</span></label>
+            <input type="email" name="email" placeholder="you@email.com" required>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="fg">
+            <label>Phone / WhatsApp <span class="req">*</span></label>
+            <input type="tel" name="phone" placeholder="+91 98765 43210" required>
+          </div>
+          <div class="fg">
+            <label>Current Location</label>
+            <input type="text" name="location" placeholder="City, State">
+          </div>
+        </div>
+        <div class="fg">
+          <label>Domain / Field of Expertise <span class="req">*</span></label>
+          <select name="domain" required>
+            <option value="">Select your domain…</option>
+            <option>Information Technology</option>
+            <option>Bioinformatics / Life Sciences</option>
+            <option>Human Resources</option>
+            <option>Marketing &amp; Sales</option>
+            <option>Finance &amp; Accounting</option>
+            <option>Healthcare / Medical</option>
+            <option>Engineering</option>
+            <option>Operations &amp; Logistics</option>
+            <option>Design &amp; Creative</option>
+            <option>Legal &amp; Compliance</option>
+            <option>Customer Service</option>
+            <option>Education &amp; Training</option>
+            <option>Pharmaceutical</option>
+            <option>Manufacturing</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Years of Experience</label>
+          <select name="experience">
+            <option value="">Select…</option>
+            <option>Fresher (0–1 year)</option>
+            <option>1–3 years</option>
+            <option>3–5 years</option>
+            <option>5–8 years</option>
+            <option>8–12 years</option>
+            <option>12+ years</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>About Your Work <span class="req">*</span></label>
+          <textarea name="bio" placeholder="Tell recruiters about your background — key skills, notable projects, technologies you've worked with, and the kind of role you're looking for. Be specific and descriptive!" required></textarea>
+        </div>
+        <div class="fg">
+          <label>Upload Your CV / Resume <span class="req">*</span></label>
+          <div class="upbox" id="cv-upbox">
+            <input type="file" accept=".pdf,.doc,.docx" id="cv-file" onchange="onFile(this,'cv-upbox','cv-fn')" required>
+            <div class="upicon">📄</div>
+            <div class="upt"><strong>Click to upload</strong> or drag &amp; drop</div>
+            <div class="upt" style="font-size:.78rem;margin-top:2px">PDF, DOC or DOCX — max 5 MB</div>
+            <div class="upname" id="cv-fn"></div>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="fg">
+            <label>LinkedIn Profile URL</label>
+            <input type="url" name="linkedin" placeholder="https://linkedin.com/in/you">
+          </div>
+          <div class="fg">
+            <label>Portfolio / GitHub URL</label>
+            <input type="url" name="portfolio" placeholder="https://github.com/you">
+          </div>
+        </div>
+        <button type="submit" class="sbtn o" id="cv-btn">Submit My Profile ✨</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ╔════════════════ POST JOB ════════════════╗ -->
+<div id="v-post" class="view">
+  <div class="fwrap">
+    <div class="fhead">
+      <div class="badge br">For Recruiters</div>
+      <h2>Post a Vacancy</h2>
+      <p>Share your job opening with our active pool of candidates. It's free and instant.</p>
+    </div>
+    <div class="fcard">
+      <form id="job-form" onsubmit="submitJob(event)">
+        <div class="frow">
+          <div class="fg">
+            <label>Your Name <span class="req">*</span></label>
+            <input type="text" name="rName" placeholder="Recruiter / HR name" required>
+          </div>
+          <div class="fg">
+            <label>Your Email <span class="req">*</span></label>
+            <input type="email" name="rEmail" placeholder="you@company.com" required>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="fg">
+            <label>Company Name <span class="req">*</span></label>
+            <input type="text" name="company" placeholder="Company Pvt. Ltd." required>
+          </div>
+          <div class="fg">
+            <label>Company Website</label>
+            <input type="url" name="website" placeholder="https://company.com">
+          </div>
+        </div>
+        <div class="fg">
+          <label>Job Title <span class="req">*</span></label>
+          <input type="text" name="title" placeholder="e.g. Senior Software Engineer" required>
+        </div>
+        <div class="frow">
+          <div class="fg">
+            <label>Domain / Industry <span class="req">*</span></label>
+            <select name="domain" required>
+              <option value="">Select domain…</option>
+              <option>Information Technology</option>
+              <option>Bioinformatics / Life Sciences</option>
+              <option>Human Resources</option>
+              <option>Marketing &amp; Sales</option>
+              <option>Finance &amp; Accounting</option>
+              <option>Healthcare / Medical</option>
+              <option>Engineering</option>
+              <option>Operations &amp; Logistics</option>
+              <option>Design &amp; Creative</option>
+              <option>Legal &amp; Compliance</option>
+              <option>Customer Service</option>
+              <option>Education &amp; Training</option>
+              <option>Pharmaceutical</option>
+              <option>Manufacturing</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Employment Type</label>
+            <select name="type">
+              <option>Full-time</option>
+              <option>Part-time</option>
+              <option>Contract</option>
+              <option>Freelance</option>
+              <option>Internship</option>
+              <option>Remote</option>
+              <option>Hybrid</option>
+            </select>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="fg">
+            <label>Job Location</label>
+            <input type="text" name="location" placeholder="Mumbai / Remote / Hybrid">
+          </div>
+          <div class="fg">
+            <label>Salary Range</label>
+            <input type="text" name="salary" placeholder="₹8–12 LPA / Negotiable">
+          </div>
+        </div>
+        <div class="fg">
+          <label>Job Description <span class="req">*</span></label>
+          <textarea name="description" placeholder="Describe the role, day-to-day responsibilities, team culture, perks, and what success looks like in this position…" required></textarea>
+        </div>
+        <div class="fg">
+          <label>Requirements &amp; Qualifications</label>
+          <textarea name="requirements" placeholder="e.g. B.Tech in CS, 3+ years Python, experience with REST APIs, strong communication skills…" style="min-height:90px"></textarea>
+        </div>
+        <div class="fg">
+          <label>How Should Candidates Apply? <span class="req">*</span></label>
+          <input type="text" name="applyTo" placeholder="Email address, WhatsApp number, or job portal link" required>
+        </div>
+        <button type="submit" class="sbtn g" id="job-btn">Post Job Vacancy 🚀</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Footer -->
+<footer>
+  <div class="fl">HireNest</div>
+  <p>A private job board for our HR &amp; Recruitment WhatsApp community 🌿</p>
+</footer>
+
+<script>
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let allJobs = [], allCands = [], jType = '';
+
+/* ══════════════════════════════════════
+   ROUTING
+══════════════════════════════════════ */
+function go(v) {
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('on'));
+  document.getElementById('v-' + v).classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (v === 'jobs')   loadJobs();
+  if (v === 'talent') loadTalent();
+  if (v === 'home')   loadStats();
+}
+go('home');
+
+/* ══════════════════════════════════════
+   FIREBASE HELPER
+══════════════════════════════════════ */
+function fb(cb) {
+  if (window._fbReady) { cb(); return; }
+  document.addEventListener('fb-ready', cb, {once:true});
+}
+
+/* ══════════════════════════════════════
+   STATS
+══════════════════════════════════════ */
+function loadStats() {
+  fb(async () => {
+    try {
+      const {collection,getDocs} = window._fb;
+      const [j,c] = await Promise.all([
+        getDocs(collection(window._db,'jobs')),
+        getDocs(collection(window._db,'candidates'))
+      ]);
+      document.getElementById('s-jobs').textContent  = j.size;
+      document.getElementById('s-cands').textContent = c.size;
+    } catch(e) {
+      document.getElementById('s-jobs').textContent  = '—';
+      document.getElementById('s-cands').textContent = '—';
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   JOBS
+══════════════════════════════════════ */
+function loadJobs() {
+  fb(async () => {
+    try {
+      const {collection,getDocs,query,orderBy} = window._fb;
+      const q   = query(collection(window._db,'jobs'), orderBy('createdAt','desc'));
+      const snp = await getDocs(q);
+      allJobs   = snp.docs.map(d => ({id:d.id,...d.data()}));
+      renderJobs(allJobs);
+    } catch(e) {
+      document.getElementById('j-grid').innerHTML = errBox('Could not load jobs. Check Firebase config.');
+    }
+  });
+}
+
+function renderJobs(list) {
+  const g = document.getElementById('j-grid');
+  if (!list.length) {
+    g.innerHTML = `<div class="empty"><div class="empty-i">🔍</div><h3>No jobs found</h3><p>Be the first to post a vacancy!</p><button class="btn btn-p" onclick="go('post')" style="margin-top:1rem">Post a Job</button></div>`;
+    return;
+  }
+  g.innerHTML = list.map(j => `
+    <div class="jcard" onclick="openJob('${j.id}')">
+      <div class="jcard-top">
+        <div class="clogo">${h(j.company||'?')[0].toUpperCase()}</div>
+        <span class="jtag">${h(j.type||'Full-time')}</span>
+      </div>
+      <h3>${h(j.title)}</h3>
+      <div class="jco">${h(j.company)}</div>
+      <div class="jmeta">
+        ${j.location ? `<span class="jmi">📍 ${h(j.location)}</span>` : ''}
+        ${j.salary   ? `<span class="jmi">💰 ${h(j.salary)}</span>`   : ''}
+        ${j.domain   ? `<span class="jmi">🏷 ${h(j.domain)}</span>`   : ''}
+      </div>
+      <div class="jdesc">${h(j.description)}</div>
+      <div class="jfoot">
+        <span class="jdate">${fmtDate(j.createdAt)}</span>
+        <button class="btn btn-p" style="font-size:.78rem;padding:6px 13px">View Details</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterJobs() {
+  const q = document.getElementById('j-search').value.toLowerCase();
+  let r   = allJobs.filter(j =>
+    [j.title,j.company,j.description,j.domain,j.location].some(f => (f||'').toLowerCase().includes(q))
+  );
+  if (jType) r = r.filter(j => j.type === jType);
+  renderJobs(r);
+}
+
+function setJType(btn, t) {
+  jType = t;
+  document.querySelectorAll('.fchip').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  filterJobs();
+}
+
+function openJob(id) {
+  const j = allJobs.find(x => x.id === id);
+  if (!j) return;
+  showModal(`
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1.4rem">
+      <div class="clogo" style="width:52px;height:52px;font-size:1.2rem;flex-shrink:0">${h(j.company||'?')[0].toUpperCase()}</div>
+      <div>
+        <h2 style="font-size:1.55rem">${h(j.title)}</h2>
+        <div style="color:var(--muted);font-size:.88rem">
+          ${h(j.company)}${j.website ? ` &nbsp;·&nbsp; <a href="${h(j.website)}" target="_blank" style="color:var(--accent)">Website ↗</a>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="chip-row">
+      ${j.type     ? `<span class="chip chip-o">${h(j.type)}</span>` : ''}
+      ${j.domain   ? `<span class="chip chip-g">${h(j.domain)}</span>` : ''}
+      ${j.location ? `<span class="chip chip-g">📍 ${h(j.location)}</span>` : ''}
+      ${j.salary   ? `<span class="chip chip-g">💰 ${h(j.salary)}</span>` : ''}
+    </div>
+    <hr class="divider">
+    <h4 style="margin-bottom:.6rem">Job Description</h4>
+    <p style="white-space:pre-wrap;color:var(--muted);font-size:.88rem;line-height:1.7">${h(j.description)}</p>
+    ${j.requirements ? `<hr class="divider"><h4 style="margin-bottom:.6rem">Requirements</h4><p style="white-space:pre-wrap;color:var(--muted);font-size:.88rem;line-height:1.7">${h(j.requirements)}</p>` : ''}
+    ${j.applyTo ? `<hr class="divider"><div style="background:rgba(27,58,45,.06);border-radius:10px;padding:1rem"><strong style="font-size:.83rem">📬 How to Apply</strong><p style="margin-top:.35rem;font-size:.88rem;color:var(--muted)">${h(j.applyTo)}</p></div>` : ''}
+    <p style="margin-top:1rem;font-size:.74rem;color:var(--muted)">Posted by ${h(j.rName)} · ${fmtDate(j.createdAt)}</p>
+  `);
+}
+
+/* ══════════════════════════════════════
+   TALENT
+══════════════════════════════════════ */
+function loadTalent() {
+  fb(async () => {
+    try {
+      const {collection,getDocs,query,orderBy} = window._fb;
+      const q   = query(collection(window._db,'candidates'), orderBy('createdAt','desc'));
+      const snp = await getDocs(q);
+      allCands  = snp.docs.map(d => ({id:d.id,...d.data()}));
+      renderTalent(allCands);
+    } catch(e) {
+      document.getElementById('c-grid').innerHTML = errBox('Could not load candidates. Check Firebase config.');
+    }
+  });
+}
+
+function renderTalent(list) {
+  const g = document.getElementById('c-grid');
+  if (!list.length) {
+    g.innerHTML = `<div class="empty"><div class="empty-i">👤</div><h3>No candidates yet</h3><p>Share the portal so people can register!</p></div>`;
+    return;
+  }
+  g.innerHTML = list.map(c => `
+    <div class="ccard">
+      <div class="avatar">${h(c.name||'?')[0].toUpperCase()}</div>
+      <h3>${h(c.name)}</h3>
+      <span class="cdomain">${h(c.domain||'General')}</span>
+      <div class="chip-row" style="margin-top:.3rem">
+        ${c.experience ? `<span class="chip chip-g" style="font-size:.73rem">⏱ ${h(c.experience)}</span>` : ''}
+        ${c.location   ? `<span class="chip chip-g" style="font-size:.73rem">📍 ${h(c.location)}</span>`   : ''}
+      </div>
+      <div class="cbio">${h(c.bio)}</div>
+      <div class="clinks">
+        ${c.cvUrl      ? `<a href="${h(c.cvUrl)}" target="_blank" class="clink">📎 Download CV</a>` : ''}
+        ${c.linkedin   ? `<a href="${h(c.linkedin)}" target="_blank" class="clink li">in LinkedIn</a>` : ''}
+        ${c.portfolio  ? `<a href="${h(c.portfolio)}" target="_blank" class="clink li">🔗 Portfolio</a>` : ''}
+      </div>
+      <div class="cmeta">📧 ${h(c.email)}${c.phone ? ` &nbsp;·&nbsp; ${h(c.phone)}` : ''}</div>
+    </div>
+  `).join('');
+}
+
+function filterTalent() {
+  const q = document.getElementById('c-search').value.toLowerCase();
+  renderTalent(allCands.filter(c =>
+    [c.name,c.domain,c.bio,c.location,c.experience].some(f => (f||'').toLowerCase().includes(q))
+  ));
+}
+
+/* ══════════════════════════════════════
+   SUBMIT CV
+══════════════════════════════════════ */
+async function submitCV(e) {
+  e.preventDefault();
+  const btn  = document.getElementById('cv-btn');
+  const form = e.target;
+  const file = document.getElementById('cv-file').files[0];
+  if (!file) { toast('Please upload your CV file.','err'); return; }
+  if (file.size > 5 * 1024 * 1024) { toast('File too large. Max 5 MB.','err'); return; }
+
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  fb(async () => {
+    try {
+      const {collection,addDoc,serverTimestamp,ref,uploadBytes,getDownloadURL} = window._fb;
+      const path = `cvs/${Date.now()}_${file.name.replace(/[^\w.]/g,'_')}`;
+      const sRef = ref(window._stor, path);
+      await uploadBytes(sRef, file);
+      const cvUrl = await getDownloadURL(sRef);
+      await addDoc(collection(window._db,'candidates'), {
+        name:       form.name.value.trim(),
+        email:      form.email.value.trim(),
+        phone:      form.phone.value.trim(),
+        location:   form.location.value.trim(),
+        domain:     form.domain.value,
+        experience: form.experience.value,
+        bio:        form.bio.value.trim(),
+        linkedin:   form.linkedin.value.trim(),
+        portfolio:  form.portfolio.value.trim(),
+        cvUrl,
+        createdAt:  serverTimestamp()
+      });
+      form.reset();
+      document.getElementById('cv-fn').textContent = '';
+      toast('🎉 Profile submitted! Recruiters can now find you.','ok');
+    } catch(err) {
+      toast('Error: ' + err.message,'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Submit My Profile ✨';
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   SUBMIT JOB
+══════════════════════════════════════ */
+async function submitJob(e) {
+  e.preventDefault();
+  const btn  = document.getElementById('job-btn');
+  const form = e.target;
+  btn.disabled = true; btn.textContent = 'Posting…';
+  fb(async () => {
+    try {
+      const {collection,addDoc,serverTimestamp} = window._fb;
+      await addDoc(collection(window._db,'jobs'), {
+        rName:       form.rName.value.trim(),
+        rEmail:      form.rEmail.value.trim(),
+        company:     form.company.value.trim(),
+        website:     form.website.value.trim(),
+        title:       form.title.value.trim(),
+        domain:      form.domain.value,
+        type:        form.type.value,
+        location:    form.location.value.trim(),
+        salary:      form.salary.value.trim(),
+        description: form.description.value.trim(),
+        requirements:form.requirements.value.trim(),
+        applyTo:     form.applyTo.value.trim(),
+        createdAt:   serverTimestamp()
+      });
+      form.reset();
+      toast('🚀 Job posted! Candidates will see your vacancy now.','ok');
+    } catch(err) {
+      toast('Error: ' + err.message,'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Post Job Vacancy 🚀';
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+function showModal(html) {
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.innerHTML = `<div class="modal"><button class="mclose" onclick="this.closest('.overlay').remove()">✕</button>${html}</div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+function onFile(inp, areaId, nameId) {
+  if (inp.files[0]) document.getElementById(nameId).textContent = '✅ ' + inp.files[0].name;
+}
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 4200);
+}
+function h(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+function errBox(msg) {
+  return `<div class="empty" style="grid-column:1/-1"><div class="empty-i">⚠️</div><h3>Oops!</h3><p>${msg}</p></div>`;
+}
+
+loadStats();
+</script>
+</body>
+</html>
