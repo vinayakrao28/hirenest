@@ -268,8 +268,51 @@
     @keyframes spin{to{transform:rotate(360deg)}}
 
     /* ── Responsive ────────────────────────────────────────────── */
-    @media(max-width:620px){
+
+    /* ── Hamburger ─────────────────────────────────────────────── */
+    .hamburger{
+      display:none;flex-direction:column;justify-content:center;gap:5px;
+      background:none;border:none;width:36px;height:36px;padding:4px;
+      cursor:pointer;border-radius:8px;transition:var(--t);
+    }
+    .hamburger:hover{background:rgba(27,58,45,.08)}
+    .hamburger span{
+      display:block;width:22px;height:2px;background:var(--primary);
+      border-radius:2px;transition:var(--t);
+    }
+    .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    .hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+    .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+    /* ── Mobile menu ───────────────────────────────────────────── */
+    .mobile-menu{
+      display:none;position:fixed;top:62px;left:0;right:0;z-index:88;
+      background:var(--surface);border-bottom:1px solid var(--border);
+      flex-direction:column;padding:.5rem;
+      box-shadow:0 8px 32px rgba(27,58,45,.12);
+      animation:fadeUp .22s ease both;
+    }
+    .mobile-menu.open{display:flex}
+    .mm-item{
+      padding:13px 16px;border:none;background:none;text-align:left;
+      font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;
+      color:var(--text);border-radius:10px;cursor:pointer;transition:var(--t);
+    }
+    .mm-item:hover{background:rgba(27,58,45,.06);color:var(--primary)}
+    .mm-item.hi{
+      background:var(--primary);color:#fff;margin-top:.35rem;text-align:center;
+      font-weight:600;
+    }
+    .mm-item.hi:hover{background:var(--primary2)}
+
+    @media(max-width:680px){
       .nl:not(.hi){display:none}
+      .nl.hi{display:none}
+      .hamburger{display:flex}
+    }
+
+    @media(max-width:620px){
+      /* nav handled above */
       .hcard{width:100%;max-width:340px}
       .frow{grid-template-columns:1fr}
       .fcard{padding:1.5rem}
@@ -289,8 +332,21 @@
     <button class="nl" onclick="go('post')">Post a Job</button>
     <button class="nl" onclick="go('about')">About</button>
     <button class="nl hi" onclick="go('cv')">Upload CV</button>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="mobile-menu">
+  <button class="mm-item" onclick="go('home');toggleMenu()">🏠 Home</button>
+  <button class="mm-item" onclick="go('jobs');toggleMenu()">💼 Browse Jobs</button>
+  <button class="mm-item" onclick="go('talent');toggleMenu()">👥 Find Talent</button>
+  <button class="mm-item" onclick="go('post');toggleMenu()">🏢 Post a Job</button>
+  <button class="mm-item" onclick="go('about');toggleMenu()">👤 About</button>
+  <button class="mm-item hi" onclick="go('cv');toggleMenu()">📄 Upload My CV</button>
+</div>
 
 <!-- ╔════════════════ HOME ════════════════╗ -->
 <div id="v-home" class="view">
@@ -1033,6 +1089,26 @@ function fmtDate(ts) {
 function errBox(msg) {
   return `<div class="empty" style="grid-column:1/-1"><div class="empty-i">⚠️</div><h3>Oops!</h3><p>${msg}</p></div>`;
 }
+
+
+/* ══════════════════════════════════════
+   MOBILE MENU
+══════════════════════════════════════ */
+function toggleMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const btn  = document.getElementById('hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('mobile-menu');
+  const btn  = document.getElementById('hamburger');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove('open');
+    btn.classList.remove('open');
+  }
+});
 
 loadStats();
 </script>
